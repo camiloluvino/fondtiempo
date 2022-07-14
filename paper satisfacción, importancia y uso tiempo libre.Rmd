@@ -1,0 +1,535 @@
+---
+title: "paper satisfacción, importancia y uso del tiempo libre"
+author: "Camilo Vera"
+date:  "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align = 'center', out.width = '80%', echo = TRUE)
+```
+
+
+```{r directorio de trabajo y librerías ,include=FALSE}
+setwd("C:/Users/cvb/Documents/Proyectos en R/fondtiempo_papertiempolibreNOENUT")
+#setwd("C:/Users/redk8/Dropbox/Proyectos en R/fondecyt_tiempo_papertiempolibreNOENUT")
+
+pacman::p_load(haven, expss, foreign, ggplot2, dplyr, writexl, readxl, gplots, ggplot2, Hmisc, DataExplorer, summarytools, nortest, car, gmodels)
+```
+
+```{r carga bases de datos,include=FALSE}
+# cargar base de datos
+UDP2005 <- haven::read_sav("fuentes de datos/encuesta nacional udp 2005.sav")
+UDP2006 <- haven::read_sav("fuentes de datos/encuesta nacional udp 2006.sav")
+UDP2007 <- haven::read_sav("fuentes de datos/encuesta nacional udp 2007.sav")
+UDP2008 <- haven::read_sav("fuentes de datos/encuesta nacional udp 2008.sav")
+UDP2009 <- haven::read_sav("fuentes de datos/encuesta nacional udp 2009.sav")
+```
+# UDP 2005
+```{r definición y selección de variables 1, include=FALSE}
+
+selUDP2005 <- UDP2005 %>% dplyr::mutate(sexo2005=case_when(P75==1~"hombre",
+                                                              P75==2~"mujer")) %>%
+                             dplyr::mutate(edad_tram2005=case_when(EDAD_Recod==1~"18 a 29",
+                                                              EDAD_Recod==2~"30 a 45",
+                                                              EDAD_Recod==3~"46 a 60",
+                                                              EDAD_Recod==4~"61 y más")) %>%
+                             dplyr::mutate(gse2005=case_when(GSE_DEF==1~"ABC1",
+                                                             GSE_DEF==2~"C2",
+                                                             GSE_DEF==3~"C3",
+                                                             GSE_DEF==4~"D",
+                                                             GSE_DEF==5~"E")) %>%
+                             dplyr::select(folio2005 = Folio, 
+                                            ponderador2005 = POND_MUESTRAL,
+                                            sexo2005,
+                                            edad_tram2005,
+                                            gse2005,
+                                            sattrab2005 = P72A,
+                                            sattlibre2005 = P72B,
+                                            satpareja2005 = P72C,
+                                            satsexual2005 = P72D,
+                                            sateconomica2005 = P72E,
+                                            satsalud2005 = P72F,
+                                            sateduc2005 = P72G,
+                                            satamistad2005 = P72H,
+                                            satfamiliar2005 = P72I,
+                                            satgeneral2005 = P72J)
+```
+
+```{r definición tipo de variables 1,include=FALSE}
+selUDP2005$sexo2005 <- as.factor(selUDP2005$sexo2005)
+selUDP2005$edad_tram2005 <- as.factor(selUDP2005$edad_tram2005)
+selUDP2005$gse2005 <- as.factor(selUDP2005$gse2005)
+selUDP2005$sattrab2005 <- as.numeric(selUDP2005$sattrab2005)
+selUDP2005$sattlibre2005 <- as.numeric(selUDP2005$sattlibre2005)
+selUDP2005$satpareja2005 <- as.numeric(selUDP2005$satpareja2005)
+selUDP2005$satsexual2005 <- as.numeric(selUDP2005$satsexual2005)
+selUDP2005$sateconomica2005 <- as.numeric(selUDP2005$sateconomica2005)
+selUDP2005$satsalud2005 <- as.numeric(selUDP2005$satsalud2005)
+selUDP2005$sateduc2005 <- as.numeric(selUDP2005$sateduc2005)
+selUDP2005$satamistad2005 <- as.numeric(selUDP2005$satamistad2005)
+selUDP2005$satfamiliar2005 <- as.numeric(selUDP2005$satfamiliar2005)
+selUDP2005$satgeneral2005 <- as.numeric(selUDP2005$satgeneral2005)
+```
+
+# UDP 2006
+```{r definición y selección de variables 2,include=FALSE}
+selUDP2006 <- UDP2006 %>% dplyr::mutate(edad_tram2006=case_when(EDADR==1~"18 a 29",
+                                                      EDADR==2~"30 a 45",
+                                                      EDADR==3~"46 a 60",
+                                                      EDADR==4~"61 y más")) %>%
+                          dplyr::mutate(gse2006=case_when(GSE_Bienes_Educa==1~"ABC1",
+                                                      GSE_Bienes_Educa==2~"C2",
+                                                      GSE_Bienes_Educa==3~"C3",
+                                                      GSE_Bienes_Educa==4~"D",
+                                                      GSE_Bienes_Educa==5~"E")) %>%
+                          dplyr::mutate(sexo2006=case_when(P73_Sexo==1~"hombre",
+                                                           P73_Sexo==2~"mujer")) %>%
+                          dplyr::mutate(educ2006=case_when(P76_EducEntrev==0~"Sin estudios",
+                                                      P76_EducEntrev==1~"Básica incompleta",
+                                                      P76_EducEntrev==2~"Básica completa",
+                                                      P76_EducEntrev==3~"Media incompleta",
+                                                      P76_EducEntrev==4~"Media completa",
+                                                      P76_EducEntrev==5~"Técnica superior no universitaria incompleta",
+                                                      P76_EducEntrev==6~"Técnica superior no universitaria completa",
+                                                      P76_EducEntrev==7~"Universitaria incompleta",
+                                                      P76_EducEntrev==8~"Universitaria completa",
+                                                      P76_EducEntrev==9~"Post grado")) %>%
+                          dplyr::select(edad_tram2006,
+                              gse2006,
+                              sexo2006,
+                              educ2006,
+                              folio2006 = FOLIO,
+                              pond_poblacional2006 = POND_POBLACION,
+                              pond_muestral2006 = POND_MUESTRAL,
+                              sattrab2006 = P60A,
+                              sattlibre2006 = P60B,
+                              satpareja2006 = P60C,
+                              satsexual2006 = P60D,
+                              sateconomica2006 = P60E,
+                              satsalud2006 = P60F,
+                              sateduc2006 = P60G,
+                              satamistad2006 = P60H,
+                              satfamiliar2006 = P60I,
+                              satgeneral2006 =   P60J,
+                              impfamilia2006 = P59A,
+                              impamigos2006 = P59B,
+                              imptiempolibre2006 = P59C,
+                              imppolitica2006 = P59D,
+                              imptrabajo2006 = P59E,
+                              impreligion2006 = P59F)
+```
+
+```{r Definición tipo variables,include=FALSE}
+selUDP2006$sexo2006 <- as.factor(selUDP2006$sexo2006)
+selUDP2006$edad_tram2006 <- as.factor(selUDP2006$edad_tram2006)
+selUDP2006$gse2006 <- as.factor(selUDP2006$gse2006)
+selUDP2006$educ2006 <- as.factor(selUDP2006$educ2006)
+
+selUDP2006$sattrab2006 <- as.numeric(selUDP2006$sattrab2006)
+selUDP2006$sattlibre2006 <- as.numeric(selUDP2006$sattlibre2006)
+selUDP2006$satpareja2006 <- as.numeric(selUDP2006$satpareja2006)
+selUDP2006$satsexual2006 <- as.numeric(selUDP2006$satsexual2006)
+selUDP2006$sateconomica2006 <- as.numeric(selUDP2006$sateconomica2006)
+selUDP2006$satsalud2006 <- as.numeric(selUDP2006$satsalud2006)
+selUDP2006$sateduc2006 <- as.numeric(selUDP2006$sateduc2006)
+selUDP2006$satamistad2006 <- as.numeric(selUDP2006$satamistad2006)
+selUDP2006$satfamiliar2006 <- as.numeric(selUDP2006$satfamiliar2006)
+selUDP2006$satgeneral2006 <- as.numeric(selUDP2006$satgeneral2006)
+selUDP2006$impfamilia2006 <- as.numeric(selUDP2006$impfamilia2006)
+selUDP2006$impamigos2006 <- as.numeric(selUDP2006$impamigos2006)
+selUDP2006$imptiempolibre2006 <- as.numeric(selUDP2006$imptiempolibre2006)
+selUDP2006$imppolitica2006 <- as.numeric(selUDP2006$imppolitica2006)
+selUDP2006$imptrabajo2006 <- as.numeric(selUDP2006$imptrabajo2006)
+selUDP2006$impreligion2006 <- as.numeric(selUDP2006$impreligion2006)
+```
+
+# UDP 2007
+```{r definición y selección de variables 3,include=FALSE}
+selUDP2007 <- UDP2007 %>% dplyr::mutate(edad_tram2007=case_when(EDAD_Recod==1~"18 a 29",
+                                                      EDAD_Recod==2~"30 a 45",
+                                                      EDAD_Recod==3~"46 a 60",
+                                                      EDAD_Recod==4~"61 y más")) %>%
+                          dplyr::mutate(gse2007=case_when(GSE_AIM==1~"ABC1",
+                                                      GSE_AIM==2~"C2",
+                                                      GSE_AIM==3~"C3",
+                                                      GSE_AIM==4~"D",
+                                                      GSE_AIM==5~"E")) %>% 
+                          dplyr::mutate(sexo2007=case_when(P83A_Sexo==1~"hombre",
+                                                           P83A_Sexo==2~"mujer")) %>%
+               dplyr::select(edad_tram2007,gse2007, sexo2007, POND_POBLACIONAL,POND_MUESTRAL, 
+                              sattrab2007 = P78A,
+                              sattlibre2007 = P78B,
+                              satpareja2007 = P78C,
+                              satsexual2007 = P78D,
+                              sateconomica2007 = P78E,
+                              satsalud2007 = P78F,
+                              sateduc2007 = P78G,
+                              satamistad2007 = P78H,
+                              satfamiliar2007 = P78I,
+                              satlugar2007 = P78J,
+                              satgeneral2007 = P78K,
+                              impfamilia2007 = P77A,
+                              impamigos2007 = P77B,
+                              imptiempolibre2007  = P77C,
+                              imppolitica2007 = P77D,
+                              imptrabajo2007 = P77E,
+                              impreligion2007 = P77F,
+                              impdinero2007 = P77G,
+                              impmedioambiente2007 = P77H,
+                              impbarrio2007 = P77I,
+                              impsalud2007 = P77J)
+```
+
+```{r definición tipo de variables 2,include=FALSE}
+selUDP2007$sexo2007 <- as.factor(selUDP2007$sexo2007)
+selUDP2007$edad_tram2007 <- as.factor(selUDP2007$edad_tram2007)
+selUDP2007$gse2007 <- as.factor(selUDP2007$gse2007)
+
+selUDP2007$sattrab2007 <- as.numeric(selUDP2007$sattrab2007)
+selUDP2007$sattlibre2007 <- as.numeric(selUDP2007$sattlibre2007)
+selUDP2007$satpareja2007 <- as.numeric(selUDP2007$satpareja2007)
+selUDP2007$satsexual2007 <- as.numeric(selUDP2007$satsexual2007)
+selUDP2007$sateconomica2007 <- as.numeric(selUDP2007$sateconomica2007)
+selUDP2007$satsalud2007 <- as.numeric(selUDP2007$satsalud2007)
+selUDP2007$sateduc2007 <- as.numeric(selUDP2007$sateduc2007)
+selUDP2007$satamistad2007 <- as.numeric(selUDP2007$satamistad2007)
+selUDP2007$satfamiliar2007 <- as.numeric(selUDP2007$satfamiliar2007)
+selUDP2007$satgeneral2007 <- as.numeric(selUDP2007$satgeneral2007)
+selUDP2007$satlugar2007 <- as.numeric(selUDP2007$satlugar2007)
+
+selUDP2007$impfamilia2007 <- as.numeric(selUDP2007$impfamilia2007)
+selUDP2007$impamigos2007 <- as.numeric(selUDP2007$impamigos2007)
+selUDP2007$imptiempolibre2007 <- as.numeric(selUDP2007$imptiempolibre2007)
+selUDP2007$imppolitica2007 <- as.numeric(selUDP2007$imppolitica2007)
+selUDP2007$imptrabajo2007 <- as.numeric(selUDP2007$imptrabajo2007)
+selUDP2007$impreligion2007 <- as.numeric(selUDP2007$impreligion2007)
+selUDP2007$impdinero2007 <- as.numeric(selUDP2007$impdinero2007)
+selUDP2007$impmedioambiente2007 <- as.numeric(selUDP2007$impmedioambiente2007)
+selUDP2007$impbarrio2007 <- as.numeric(selUDP2007$impbarrio2007)
+selUDP2007$impsalud2007 <- as.numeric(selUDP2007$impsalud2007)
+
+```
+
+# UDP 2008
+```{r definición y selección de variables 4,include=FALSE}
+selUDP2008 <- UDP2008 %>% dplyr::mutate(edad_tram2008=case_when(Edad_Rango==1~"18 a 29",
+                                                      Edad_Rango==2~"30 a 45",
+                                                      Edad_Rango==3~"46 a 60",
+                                                      Edad_Rango==4~"61 y más")) %>%
+                          dplyr::mutate(gse2008=case_when(Gse_Aim==1~"ABC1",
+                                                      Gse_Aim==2~"C2",
+                                                      Gse_Aim==3~"C3",
+                                                      Gse_Aim==4~"D",
+                                                      Gse_Aim==5~"E")) %>%
+                          dplyr::mutate(sexo2008=case_when(P105_Sexo==1~"hombre",
+                                                           P105_Sexo==2~"mujer")) %>%
+  dplyr::select(edad_tram2008, gse2008, sexo2008, Pond_Poblac, Pond_Muestral, 
+    sattrab2008 = P93_1,
+    sattlibre2008 = P93_2,
+    satpareja2008 = P93_3,
+    satsexual2008 = P93_4,
+    sateconomica2008 = P93_5,
+    satsalud2008 = P93_6,
+    sateduc2008 = P93_7,
+    satamistad2008 = P93_8,
+    satfamiliar2008 = P93_9,
+    satbarrio2008 = P93_10,
+    satgeneral2008 = P93_11,
+    impfamilia2008 = P92_1,
+    impamigos2008 = P92_2,
+    imptiempolibre2008 = P92_3,
+    imppolitica2008 = P92_4,
+    imptrabajo2008 = P92_5,
+    impreligion2008 = P92_6)
+
+```
+
+```{r definición tipo de variables 3,include=FALSE}
+
+selUDP2008$sexo2008 <- as.factor(selUDP2008$sexo2008)
+selUDP2008$edad_tram2008 <- as.factor(selUDP2008$edad_tram2008)
+selUDP2008$gse2008 <- as.factor(selUDP2008$gse2008)
+
+selUDP2008$sattrab2008 <- as.numeric(selUDP2008$sattrab2008)
+selUDP2008$sattlibre2008 <- as.numeric(selUDP2008$sattlibre2008)
+selUDP2008$satpareja2008 <- as.numeric(selUDP2008$satpareja2008)
+selUDP2008$satsexual2008 <- as.numeric(selUDP2008$satsexual2008)
+selUDP2008$sateconomica2008 <- as.numeric(selUDP2008$sateconomica2008)
+selUDP2008$satsalud2008 <- as.numeric(selUDP2008$satsalud2008)
+selUDP2008$sateduc2008 <- as.numeric(selUDP2008$sateduc2008)
+selUDP2008$satamistad2008 <- as.numeric(selUDP2008$satamistad2008)
+selUDP2008$satfamiliar2008 <- as.numeric(selUDP2008$satfamiliar2008)
+selUDP2008$satgeneral2008 <- as.numeric(selUDP2008$satgeneral2008)
+selUDP2008$satbarrio2008 <- as.numeric(selUDP2008$satbarrio2008)
+
+selUDP2008$impfamilia2008 <- as.numeric(selUDP2008$impfamilia2008)
+selUDP2008$impamigos2008 <- as.numeric(selUDP2008$impamigos2008)
+selUDP2008$imptiempolibre2008 <- as.numeric(selUDP2008$imptiempolibre2008)
+selUDP2008$imppolitica2008 <- as.numeric(selUDP2008$imppolitica2008)
+selUDP2008$imptrabajo2008 <- as.numeric(selUDP2008$imptrabajo2008)
+selUDP2008$impreligion2008 <- as.numeric(selUDP2008$impreligion2008)
+
+```
+
+# UDP 2009
+```{r definición y selección de variables 5,include=FALSE}
+
+selUDP2009 <- UDP2009 %>% dplyr::mutate(edad_tram2009=case_when(edad==1~"18 a 29",
+                                                      edad==2~"30 a 45",
+                                                      edad==3~"46 a 60",
+                                                      edad==4~"61 y más")) %>%
+                          dplyr::mutate(gse2009=case_when(NSE==1~"ABC1",
+                                                      NSE==2~"C2",
+                                                      NSE==3~"C3",
+                                                      NSE==4~"D",
+                                                      NSE==5~"E")) %>%     
+                          dplyr::mutate(sexo2009=case_when(P99_Sexo==1~"hombre",
+                                                           P99_Sexo==2~"mujer")) %>%
+                           dplyr::select(edad_tram2009, gse2009, sexo2009, 
+                                                      sattrab2009 = P92_1,
+                                                      sattlibre2009 = P92_2,
+                                                      satpareja2009 = P92_3,
+                                                      satsexual2009 = P92_4,
+                                                      sateconomica2009 = P92_5,
+                                                      satsalud2009 = P92_6,
+                                                      sateduc2009 = P92_7,
+                                                      satamistad2009 = P92_8,
+                                                      satfamiliar2009 = P92_9,
+                                                      satbarrio2009 = P92_10,
+                                                      satgeneral2009 = P92_11,
+                                                      impfamilia2009 = P91_1,
+                                                      impamigos2009 = P91_2,
+                                                      imptiempolibre2009 = P91_3,
+                                                      imppolitica2009 = P91_4,
+                                                      imptrabajo2009 = P91_5,
+                                                      impreligion2009 = P91_6)
+```
+
+```{r definición tipo de variables 4,include=FALSE}
+selUDP2009$sexo2009 <- as.factor(selUDP2009$sexo2009)
+selUDP2009$edad_tram2009 <- as.factor(selUDP2009$edad_tram2009)
+selUDP2009$gse2009 <- as.factor(selUDP2009$gse2009)
+
+selUDP2009$sattrab2009 <- as.numeric(selUDP2009$sattrab2009)
+selUDP2009$sattlibre2009 <- as.numeric(selUDP2009$sattlibre2009)
+selUDP2009$satpareja2009 <- as.numeric(selUDP2009$satpareja2009)
+selUDP2009$satsexual2009 <- as.numeric(selUDP2009$satsexual2009)
+selUDP2009$sateconomica2009 <- as.numeric(selUDP2009$sateconomica2009)
+selUDP2009$satsalud2009 <- as.numeric(selUDP2009$satsalud2009)
+selUDP2009$sateduc2009 <- as.numeric(selUDP2009$sateduc2009)
+selUDP2009$satamistad2009 <- as.numeric(selUDP2009$satamistad2009)
+selUDP2009$satfamiliar2009 <- as.numeric(selUDP2009$satfamiliar2009)
+selUDP2009$satgeneral2009 <- as.numeric(selUDP2009$satgeneral2009)
+selUDP2009$satbarrio2009 <- as.numeric(selUDP2009$satbarrio2009)
+
+selUDP2009$impfamilia2009 <- as.numeric(selUDP2009$impfamilia2009)
+selUDP2009$impamigos2009 <- as.numeric(selUDP2009$impamigos2009)
+selUDP2009$imptiempolibre2009 <- as.numeric(selUDP2009$imptiempolibre2009)
+selUDP2009$imppolitica2009 <- as.numeric(selUDP2009$imppolitica2009)
+selUDP2009$imptrabajo2009 <- as.numeric(selUDP2009$imptrabajo2009)
+selUDP2009$impreligion2009 <- as.numeric(selUDP2009$impreligion2009)
+```
+
+
+# pruebas de hipótesis con variable satisfacción tiempo libre según sexo
+
+## UDP2005
+```{r t test 1}
+# resumen
+selUDP2005 %>% 
+  summarise(media = mean(sattlibre2005, na.rm = TRUE)) %>% round(2)
+
+
+summarise(selUDP2005, media = mean(sattlibre2005, na.rm = TRUE))
+
+
+DB_gestion %>% 
+  summarise("media" = round(mean(dipres_confianza, na.rm = TRUE),2),
+            "frecuencia" = n(),
+            "desviación estándar" = round(sd(dipres_confianza, na.rm = TRUE),2))
+
+
+# test de normalidad
+nortest::lillie.test(selUDP2005$sattlibre2005)
+
+#test de homocedasticidad
+car::leveneTest(selUDP2005$sattlibre2005 ~ selUDP2005$sexo2005, var.eq = TRUE, conf.int = TRUE)
+
+dplyr::summarise(selUDP2005, sexo2005, media = mean(sattlibre2005))
+
+selUDP2005 %>% group_by(sexo2005) %>% summarize(media = mean(sattlibre2005))
+
+table(selUDP2005$sexo2005, selUDP2005$sattlibre2005)
+
+CrossTable(selUDP2005$sexo2005, selUDP2005$sattlibre2005)
+
+summary(selUDP2005$sexo2005)
+class(selUDP2005$satt)
+
+
+ggplot(selUDP2005, aes(sexo2005, sattlibre2005)) +
+  geom_boxplot()
+t.test(selUDP2005$sattlibre2005 ~ selUDP2005$sexo2005, var.eq = TRUE, conf.int = TRUE)
+```
+
+## UDP 2006
+```{r t test 2}
+# test de normalidad
+nortest::lillie.test(selUDP2006$sattlibre2006)
+
+#test de homocedasticidad
+car::leveneTest(selUDP2006$sattlibre2006 ~ selUDP2006$sexo2006, var.eq = TRUE, conf.int = TRUE)
+ggplot(selUDP2006, aes(sexo2006, sattlibre2006)) +
+  geom_boxplot()
+t.test(selUDP2006$sattlibre2006 ~ selUDP2006$sexo2006, var.eq = TRUE, conf.int = TRUE)
+```
+
+## UDP 2007
+```{r t test 3}
+# test de normalidad
+nortest::lillie.test(selUDP2007$sattlibre2007)
+
+#test de homocedasticidad
+car::leveneTest(selUDP2007$sattlibre2007 ~ selUDP2007$sexo2007, var.eq = TRUE, conf.int = TRUE)
+ggplot(selUDP2007, aes(sexo2007, sattlibre2007)) +
+  geom_boxplot()
+t.test(selUDP2007$sattlibre2007 ~ selUDP2007$sexo2007, var.eq = TRUE, conf.int = TRUE)
+```
+
+## UDP 2008
+```{r t test 4}
+# test de normalidad
+nortest::lillie.test(selUDP2008$sattlibre2008)
+
+#test de homocedasticidad
+car::leveneTest(selUDP2008$sattlibre2008 ~ selUDP2008$sexo2008, var.eq = TRUE, conf.int = TRUE)
+ggplot(selUDP2008, aes(sexo2008, sattlibre2008)) +
+  geom_boxplot()
+t.test(selUDP2008$sattlibre2008 ~ selUDP2008$sexo2008, var.eq = TRUE, conf.int = TRUE)
+```
+
+## UDP 2009
+```{r t test 5}
+# test de normalidad
+nortest::lillie.test(selUDP2009$sattlibre2009)
+
+#test de homocedasticidad
+car::leveneTest(selUDP2009$sattlibre2009 ~ selUDP2009$sexo2009, var.eq = TRUE, conf.int = TRUE)
+ggplot(selUDP2009, aes(sexo2009, sattlibre2009)) +
+  geom_boxplot()
+t.test(selUDP2009$sattlibre2009 ~ selUDP2009$sexo2009, var.eq = TRUE, conf.int = TRUE)
+
+```
+
+# pruebas de hipótesis con variable satisfacción tiempo libre según nivel socioeconómico
+
+## 2005
+```{r ANOVA 1}
+#test de homocedasticidad
+car::leveneTest(selUDP2005$sattlibre2005 ~ selUDP2005$gse2005, var.eq = TRUE, conf.int = TRUE)
+
+
+#intentos infructuosos de hacer resumen
+selUDP2005 %>% 
+  summarise(media = mean(sattrab2005, na.rm = TRUE))
+mean(selUDP2005$sattrab2005, na.rm = TRUE)
+
+ggplot(selUDP2005, aes(gse2005, sattlibre2005)) + 
+  geom_boxplot()
+aov(selUDP2005$sattlibre2005 ~ selUDP2005$gse2005) %>% summary()
+```
+
+## 2006
+```{r ANOVA 2}
+#test de homocedasticidad
+car::leveneTest(selUDP2006$sattlibre2006 ~ selUDP2006$gse2006, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2006, aes(gse2006, sattlibre2006)) + 
+  geom_boxplot()
+aov(selUDP2006$sattlibre2006 ~ selUDP2006$gse2006) %>% summary()
+```
+
+## 2007
+```{r ANOVA 3}
+#test de homocedasticidad
+car::leveneTest(selUDP2007$sattlibre2007 ~ selUDP2007$gse2007, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2007, aes(gse2007, sattlibre2007)) + 
+  geom_boxplot()
+aov(selUDP2007$sattlibre2007 ~ selUDP2007$gse2007) %>% summary()
+```
+
+## 2008
+```{r ANOVA 4}
+#test de homocedasticidad
+car::leveneTest(selUDP2008$sattlibre2008 ~ selUDP2008$gse2008, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2008, aes(gse2008, sattlibre2008)) + 
+  geom_boxplot()
+aov(selUDP2008$sattlibre2008 ~ selUDP2008$gse2008) %>% summary()
+```
+
+## 2009
+```{r ANOVA 5}
+#test de homocedasticidad
+car::leveneTest(selUDP2009$sattlibre2009 ~ selUDP2009$gse2009, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2009, aes(gse2009, sattlibre2009)) + 
+  geom_boxplot()
+aov(selUDP2009$sattlibre2009 ~ selUDP2009$gse2009) %>% summary()
+```
+
+# pruebas de hipótesis con variable satisfacción tiempo libre según **edad**
+## 2005
+```{r ANOVA 6}
+#test de homocedasticidad
+car::leveneTest(selUDP2005$sattlibre2005 ~ selUDP2005$edad_tram2005, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2005, aes(edad_tram2005, sattlibre2005)) + 
+  geom_boxplot()
+aov(selUDP2005$sattlibre2005 ~ selUDP2005$edad_tram2005) %>% summary()
+```
+
+## 2006
+```{r ANOVA 7}
+#test de homocedasticidad
+car::leveneTest(selUDP2006$sattlibre2006 ~ selUDP2006$edad_tram2006, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2006, aes(edad_tram2006, sattlibre2006)) + 
+  geom_boxplot()
+aov(selUDP2006$sattlibre2006 ~ selUDP2006$edad_tram2006) %>% summary()
+```
+
+## 2007
+```{r ANOVA 8}
+#test de homocedasticidad
+car::leveneTest(selUDP2007$sattlibre2007 ~ selUDP2007$edad_tram2007, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2007, aes(edad_tram2007, sattlibre2007)) + 
+  geom_boxplot()
+aov(selUDP2007$sattlibre2007 ~ selUDP2007$edad_tram2007) %>% summary()
+```
+
+## 2008
+```{r ANOVA 9}
+#test de homocedasticidad
+car::leveneTest(selUDP2008$sattlibre2008 ~ selUDP2008$edad_tram2008, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2008, aes(edad_tram2008, sattlibre2008)) + 
+  geom_boxplot()
+aov(selUDP2008$sattlibre2008 ~ selUDP2008$edad_tram2008) %>% summary()
+```
+
+## 2009
+```{r ANOVA 10}
+#test de homocedasticidad
+car::leveneTest(selUDP2009$sattlibre2009 ~ selUDP2009$edad_tram2009, var.eq = TRUE, conf.int = TRUE)
+
+ggplot(selUDP2009, aes(edad_tram2009, sattlibre2009)) + 
+  geom_boxplot()
+aov(selUDP2009$sattlibre2009 ~ selUDP2009$edad_tram2009) %>% summary()
+
+```
