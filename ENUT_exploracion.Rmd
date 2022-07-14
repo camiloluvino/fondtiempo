@@ -1,0 +1,280 @@
+---
+title: "Fondecyt_analisisENUT_papersatisfacción"
+author: "Camilo"
+date: "16/12/2021"
+output: html_document
+---
+
+#carga de paquetes, base y directorio de trabajo
+```{r}
+
+setwd("C:/Users/cvb/Documents/Proyectos de R/Fondecyt_análisisENUT")
+
+getwd()
+
+pacman::p_load(dplyr,haven,ggplot2,naniar,visdat,skimr,Hmisc,summarytools,stats)
+
+```
+
+```{r}
+enut_original<-read_sav("BASE ENUT 2015 ORIGINAL.sav")
+```
+
+#listado de variables con las que trabajar
+```{r eval=FALSE, include=FALSE}
+# c13_1_1 = sexo
+# c14_1_1 = edad
+# edad = edad_tramo
+# educ = educ_nivel
+# escolaridad = educ_años
+# cae = act_economica
+# quintil = quintil
+# t11_1_1 ¿Qué tan satisfecho está con el tiempo que dedica a usted mismo? = satmismo
+# t11_1_2 ¿Qué tan satisfecho está con el tiempo que dedica a su pareja? = satparej
+# t11_1_3 ¿Qué tan satisfecho está con el tiempo que dedica a sus hijos(as)? = sathijos
+# t11_1_4 ¿Qué tan satisfecho está con el tiempo que dedica a sus padres? = satpadres
+# t11_1_5 ¿Qué tan satisfecho está con el tiempo que dedica al trabajo? = sattrab
+# t11_1_6 ¿Qué tan satisfecho está con el tiempo que dedica a sus amistades? = satamis
+# t11_1_7 ¿Qué tan satisfecho está con el tiempo que dedica a pasatiempos? = satpasat
+# t11_1_8 ¿Qué tan satisfecho está con el tiempo que dedica al descanso? = satdesc
+# t12_1_3 ¿Qué tan satisfecho se siente con su cantidad de tiempo libre? = satcantiemp
+# t12_1_4 ¿Qué tan satisfecho se siente con su calidad de tiempo libre? = satcaltiemp
+```
+
+#filtro y selección de variables
+```{r}
+sat<-enut_original%>% 
+  dplyr::filter(as.integer(c14_1_1)>=18)%>%
+  dplyr::filter(tiempo==1)%>%
+  dplyr::filter(region==13)%>%
+  dplyr::select(c13_1_1, 
+                c14_1_1, 
+                edad, 
+                educ, 
+                escolaridad, 
+                cae, 
+                quintil, 
+                t11_1_1, 
+                t11_1_2, 
+                t11_1_3, 
+                t11_1_4, 
+                t11_1_5, 
+                t11_1_6, 
+                t11_1_7, 
+                t11_1_8, 
+                t12_1_3, 
+                t12_1_4)
+```
+
+#renombre de variales
+```{r}
+#renombre de variables
+sat <- sat%>%
+  dplyr::rename(sexo = c13_1_1,
+               edad = c14_1_1,
+               edad_tramo = edad,
+               educ_nivel = educ, 
+               educ_años = escolaridad, 
+               act_economica = cae, 
+               quintil = quintil, 
+               satmismo = t11_1_1,  
+               satparej = t11_1_2,  
+               sathijos = t11_1_3,  
+               satpadres = t11_1_4,  
+               sattrab = t11_1_5,  
+               satamis = t11_1_6,  
+               satpasat = t11_1_7,  
+               satdesc = t11_1_8,  
+               satcantiemp = t12_1_3,  
+               satcaltiemp = t12_1_4)
+```
+
+#renombre de valores de variables
+```{r}
+sat <- sat%>%
+  dplyr::mutate(sexo=case_when(sexo==1~"hombre",
+                               sexo==2~"mujer"))%>%
+  dplyr::mutate(edad_tramo=case_when(edad_tramo==1~"18 a 24",
+                                     edad_tramo==2~"25 a 45",
+                                     edad_tramo==3~"46 a 65",
+                                     edad_tramo==4~"66 y más"))%>%
+  dplyr::mutate(educ_nivel=case_when(educ_nivel==0~"Sin educación formal",
+                                educ_nivel==1~"Básica incompleta",
+                                educ_nivel==2~"Básica completa",
+                                educ_nivel==3~"Media humanista incompleta",
+                                educ_nivel==4~"Media técnica-profesional incompleta",
+                                educ_nivel==5~"Media humanista completa",
+                                educ_nivel==6~"Media técnica-profesional completa",
+                                educ_nivel==7~"Técnico nivel superior incompleto",
+                                educ_nivel==8~"Técnico nivel superior completo",
+                                educ_nivel==9~"Profesional  incompleto",
+                                educ_nivel==10~"Profesional completo",
+                                educ_nivel==12~"Postgrado incompleto",
+                                educ_nivel==13~"Postgrado completo"))%>%
+  dplyr::mutate(act_economica=case_when(act_economica==1~"Menor de 15 años",
+                                act_economica==2~"Ocupada(o)",
+                                act_economica==3~"Desocupada(o)",
+                                act_economica==4~"Inactiva(o)",
+                                act_economica==5~"Sin clasificar"))
+```
+
+#coerción a factores y numéricas 
+```{r}
+
+#Como factores
+sat$sexo <- factor(sat$sexo)
+sat$edad_tramo <- factor(sat$edad_tramo)
+sat$act_economica <- factor(sat$act_economica)
+sat$educ_nivel <- factor(sat$educ_nivel, order = TRUE, levels = c("Sin educación formal","Básica incompleta","Básica completa","Media humanista incompleta","Media técnica-profesional incompleta","Media humanista completa","Media técnica-profesional completa","Técnico nivel superior incompleto","Técnico nivel superior completo","Profesional  incompleto","Profesional completo","Postgrado incompleto","Postgrado completo"))
+sat$quintil <- factor(sat$quintil)
+sat$satmismo <- factor(sat$satmismo)
+sat$satparej <- factor(sat$satparej)
+sat$sathijos <- factor(sat$sathijos)
+sat$satpadres <- factor(sat$satpadres)
+sat$sattrab <- factor(sat$sattrab)
+sat$satamis <- factor(sat$satamis)
+sat$satpasat <- factor(sat$satpasat)
+sat$satdesc <- factor(sat$satdesc)
+sat$satcantiemp <- factor(sat$satcantiemp)
+sat$satcaltiemp <- factor(sat$satcaltiemp)
+
+#como numéricas (sólo variables de satisfacción)
+sat$satmismo_num <- as.numeric(sat$satmismo)
+sat$satparej_num <- as.numeric(sat$satparej)
+sat$sathijos_num <- as.numeric(sat$sathijos)
+sat$satpadres_num <- as.numeric(sat$satpadres)
+sat$sattrab_num <- as.numeric(sat$sattrab)
+sat$satamis_num <- as.numeric(sat$satamis)
+sat$satpasat_num <- as.numeric(sat$satpasat)
+sat$satdesc_num <- as.numeric(sat$satdesc)
+sat$satcantiemp_num <- as.numeric(sat$satcantiemp)
+sat$satcaltiemp_num <- as.numeric(sat$satcaltiemp)
+```
+
+# Perdidos 
+```{r}
+sat <- replace_with_na(sat, replace = list(satmismo = c("-888", "-999"),
+                                           satmismo = c("-888", "-999"),
+                                           satparej = c("-888", "-999"),
+                                           sathijos = c("-888", "-999"),
+                                           satpadres = c("-888", "-999"),
+                                           sattrab = c("-888", "-999"),
+                                           satamis = c("-888", "-999"),
+                                           satpasat = c("-888", "-999"),
+                                           satdesc = c("-888", "-999"),
+                                           satcantiemp = c("-888", "-999"),
+                                           satcaltiemp = c("-888", "-999")))
+#sat <- na.omit(sat)
+
+```
+
+#Descriptivos del data frame
+```{r eval=FALSE, include=FALSE}
+summarytools::dfSummary(sat)
+summary(sat$educ_nivel)
+```
+
+#tablas descriptivas
+```{r}
+
+table(sat$sexo, sat$satparej_num)
+
+table(sat$sexo, sat$satparej_num, useNA = "always")
+
+prop.table(table(sat$sexo, sat$satparej_num, useNA = "always")) %>% round(2)
+
+xtable(sexo+satparej_num, data = sat)
+
+```
+
+
+## Group By para variables de satisfacción Selección de variables del 211021 (3 de tiempos personales y 3 de tiempos familiares)
+```{r}
+
+sat %>% group_by(sexo) %>%
+  summarise(media = mean(satparej_num))
+
+
+table(sat$sexo)
+
+str(sat$sexo)
+
+table(sat$satparej_num)
+
+  
+sat$satparej_num
+
+```
+
+##Boxplot para variables de satisfacción Selección de variables del 211021 (3 de tiempos personales y 3 de tiempos familiares)
+```{r}
+#Diferencias según sexo
+ggplot(sat,aes(sexo,satparej_num)) + 
+   geom_boxplot()
+ggplot(sat,aes(sexo,sathijos_num)) + 
+   geom_boxplot()
+ggplot(sat,aes(sexo,satpadres_num)) + 
+   geom_boxplot()
+ggplot(sat,aes(sexo,satamis_num)) + 
+   geom_boxplot()
+ggplot(sat,aes(sexo,satpasat_num)) + 
+   geom_boxplot()
+ggplot(sat,aes(sexo,satdesc_num)) + 
+   geom_boxplot()
+
+#Diferencias según tramo de edad
+
+#Diferencias según quintil
+
+#Diferencias según actividad económica
+
+#diferencias según nivel educativo
+
+```
+
+##Anova para variables de satisfacción Selección de variables del 211021 (3 de tiempos personales y 3 de tiempos familiares)
+```{r eval=FALSE, include=FALSE}
+#Diferencias según sexo
+anova_satparej_num_sexo <- aov(sat$satparej_num~sat$sexo)
+anova_sathijos_num_sexo <- aov(sat$sathijos_num~sat$sexo)
+anova_satpadres_num_sexo <- aov(sat$satpadres_num~sat$sexo)
+anova_satamis_num_sexo <- aov(sat$satamis_num~sat$sexo)
+anova_satpasat_num_sexo <- aov(sat$satpasat_num~sat$sexo)
+anova_satdesc_num_sexo <- aov(sat$satdesc_num ~sat$sexo)
+
+#Diferencias según tramo de edad
+anova_satparej_num_edad_tramo <- aov(sat$satparej_num~sat$edad_tramo)
+anova_sathijos_num_edad_tramo <- aov(sat$sathijos_num~sat$edad_tramo)
+anova_satpadres_num_edad_tramo <- aov(sat$satpadres_num~sat$edad_tramo)
+anova_satamis_num_edad_tramo <- aov(sat$satamis_num~sat$edad_tramo)
+anova_satpasat_num_edad_tramo <- aov(sat$satpasat_num~sat$edad_tramo)
+anova_satdesc_num_edad_tramo <- aov(sat$satdesc_num ~sat$edad_tramo)
+
+#Diferencias según quintil
+anova_satparej_num_quintil <- aov(sat$satparej_num~sat$quintil)
+anova_sathijos_num_quintil <- aov(sat$sathijos_num~sat$quintil)
+anova_satpadres_num_quintil <- aov(sat$satpadres_num~sat$quintil)
+anova_satamis_num_quintil <- aov(sat$satamis_num~sat$quintil)
+anova_satpasat_num_quintil <- aov(sat$satpasat_num~sat$quintil)
+anova_satdesc_num_quintil <- aov(sat$satdesc_num ~sat$quintil)
+
+#Diferencias según actividad económica
+anova_satparej_num_act_economica <- aov(sat$satparej_num~sat$act_economica)
+anova_sathijos_num_act_economica <- aov(sat$sathijos_num~sat$act_economica)
+anova_satpadres_num_act_economica <- aov(sat$satpadres_num~sat$act_economica)
+anova_satamis_num_act_economica <- aov(sat$satamis_num~sat$act_economica)
+anova_satpasat_num_act_economica <- aov(sat$satpasat_num~sat$act_economica)
+anova_satdesc_num_act_economica <- aov(sat$satdesc_num ~sat$act_economica)
+
+#diferencias según nivel educativo
+anova_satparej_num_educ_nivel <- aov(sat$satparej_num~sat$educ_nivel)
+anova_sathijos_num_educ_nivel <- aov(sat$sathijos_num~sat$educ_nivel)
+anova_satpadres_num_educ_nivel <- aov(sat$satpadres_num~sat$educ_nivel)
+anova_satamis_num_educ_nivel <- aov(sat$satamis_num~sat$educ_nivel)
+anova_satpasat_num_educ_nivel <- aov(sat$satpasat_num~sat$educ_nivel)
+anova_satdesc_num_educ_nivel <- aov(sat$satdesc_num ~sat$educ_nivel)
+```
+
+
+
+
